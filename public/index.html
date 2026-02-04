@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spin & Win | Exclusive Discounts</title>
+  <meta name="description" content="Spin the wheel to win exclusive discounts and prizes!">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Preload fonts for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Spin & Win</h1>
+      <p class="subtitle">Test your luck to win up to 50% OFF!</p>
+    </header>
+
+    <main>
+      <!-- Wheel Section -->
+      <div class="wheel-container">
+        <!-- Indicator Marker -->
+        <div class="marker"></div>
+
+        <!-- Rotating Part -->
+        <div class="wheel-outer" id="wheelOuter">
+          <div class="wheel">
+            <!-- Wheel Text Segments -->
+            <div class="segment" style="--i:1;"><span>50%<br>OFF</span></div>
+            <div class="segment" style="--i:2;"><span>Try<br>Again</span></div>
+            <div class="segment" style="--i:3;"><span>20%<br>OFF</span></div>
+            <div class="segment" style="--i:4;"><span>Try<br>Again</span></div>
+            <div class="segment" style="--i:5;"><span>10%<br>OFF</span></div>
+            <div class="segment" style="--i:6;"><span>Try<br>Again</span></div>
+            <div class="segment" style="--i:7;"><img src="chocolate.png" alt="Chocolate" class="prize-icon"></div>
+            <div class="segment" style="--i:8;"><span>Try<br>Again</span></div>
+          </div>
+        </div>
+
+        <!-- Center Cap -->
+        <div class="wheel-center">
+          <span>SPIN</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button id="spinBtn" class="spin-btn">Spin Now</button>
+      </div>
+
+      <!-- Result Modal (Hidden initially) -->
+      <div id="resultModal" class="result-modal" aria-live="polite">
+        <h2 id="resultTitle" class="result-title"></h2>
+        <p id="resultMessage" class="message"></p>
+
+        <div id="discountSection" class="code-container">
+          <div class="code-box">
+            <span class="code-label">Discount Code:</span>
+            <span id="discountCode" class="code-value">---</span>
+            <button class="copy-btn" onclick="copyToClipboard('discountCode')">Copy</button>
+          </div>
+        </div>
+
+        <div id="redemptionSection" class="code-container hidden">
+          <div class="code-box">
+            <span class="code-label">Redemption ID:</span>
+            <span id="redemptionCode" class="code-value">---</span>
+            <button class="copy-btn" onclick="copyToClipboard('redemptionCode')">Copy</button>
+          </div>
+          <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 5px;">
+            * Show this ID to cashier to claim your prize.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p style="margin-top: 40px; font-size: 0.8rem; opacity: 0.5;">
+        &copy; 2024 Campaign. Terms & Conditions apply.
+      </p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
