@@ -19,15 +19,10 @@ app.use(express.static('public')); // Serve frontend files
 // Routes
 app.use('/api', routes);
 
-// Global Error Handler
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    apiResponse(res, 500, false, null, process.env.NODE_ENV === 'development' ? err.message : "Internal Server Error");
-});
-
-// 404 Handler
-app.use((req, res) => {
-    apiResponse(res, 404, false, null, "Route not found");
+// Catch-all route - serve index.html for any non-API route
+// This allows the frontend to work properly
+app.get('*', (req, res) => {
+    res.sendFile('index.html', { root: 'public' });
 });
 
 // Start Server
