@@ -8,7 +8,6 @@
   <meta name="description" content="Spin the wheel to win exclusive discounts and prizes!">
   <link rel="stylesheet" href="styles.css">
 
-  <!-- Preload fonts for performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
@@ -26,15 +25,12 @@
     </header>
 
     <main>
-      <!-- Wheel Section -->
       <div class="wheel-container">
-        <!-- Indicator Marker -->
         <div class="marker"></div>
 
-        <!-- Rotating Part -->
+        
         <div class="wheel-outer" id="wheelOuter">
           <div class="wheel">
-            <!-- Wheel Text Segments -->
             <div class="segment" style="--i:1;"><span>50%<br>OFF</span></div>
             <div class="segment" style="--i:2;"><span>Try<br>Again</span></div>
             <div class="segment" style="--i:3;"><span>20%<br>OFF</span></div>
@@ -46,18 +42,15 @@
           </div>
         </div>
 
-        <!-- Center Cap -->
         <div class="wheel-center">
           <span>SPIN</span>
         </div>
       </div>
 
-      <!-- Controls -->
       <div class="controls">
         <button id="spinBtn" class="spin-btn">Spin Now</button>
       </div>
 
-      <!-- Result Modal (Hidden initially) -->
       <div id="resultModal" class="result-modal" aria-live="polite">
         <h2 id="resultTitle" class="result-title"></h2>
         <p id="resultMessage" class="message"></p>
@@ -94,3 +87,4 @@
 </body>
 
 </html>
+
