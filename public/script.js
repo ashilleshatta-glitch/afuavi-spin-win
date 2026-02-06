@@ -49,76 +49,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Real API Call
-    const mockApiCall = async () => {
-        const customerId = getCustomerId();
-
-        const response = await fetch('/api/spin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ customerId })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Spin failed");
-        }
-
-        const data = await response.json();
-
-        return {
-            status: data.won ? 'win' : 'lose',
-            discount_percentage: 0, // Will be set by wheel landing
-            discount_code: data.discount_code || "SAVE10",
-            redemption_code: data.discount_code
-        };
-    };
-
     // Handle Spin
     spinBtn.addEventListener('click', async () => {
         if (isSpinning || hasSpun) return;
 
-        // Ensure registration fired at least once if needed
-        getCustomerId();
-
+        const customerId = getCustomerId();
         isSpinning = true;
         spinBtn.disabled = true;
         spinBtn.textContent = "Spinning...";
 
         try {
             // 2. Make API Call
-            const data = await mockApiCall();
+            const response = await fetch('/api/spin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId })
+            });
 
-            // 3. Precise Visual Stopping Logic
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Spin failed");
+            }
+
+            const data = await response.json();
+            const resultData = {
+                status: data.won ? 'win' : 'lose',
+                discount_code: data.discount_code,
+                redemption_code: data.discount_code,
+                prize_description: data.prize_label
+            };
+
+            // 3. Map Prize to Wheel Segment
+            // Segments are 1-indexed (1-8)
+            // 1: 50%, 2: Lose, 3: 20%, 4: Lose, 5: 10%, 6: Lose, 7: Chocolate, 8: Lose
             let targetIndex;
-            // 8 Segments (45deg each). Top is 0deg.
-            // Seg 1 (22.5deg): 50% | Seg 2 (67.5deg): Try Again
-            // Seg 3 (112.5deg): 20% | Seg 4 (157.5deg): Try Again
-            // Seg 5 (202.5deg): 10% | Seg 6 (247.5deg): Try Again
-            // Seg 7 (292.5deg): 5% | Seg 8 (337.5deg): Try Again
 
-            if (data.status === 'win') {
-                const winIndices = [1, 3, 5, 7];
-                targetIndex = winIndices[Math.floor(Math.random() * winIndices.length)];
-
-                const prizes = {
-                    1: "50% Discount",
-                    3: "20% Discount",
-                    5: "10% Discount",
-                    7: "Box of Chocolates"
+            if (resultData.status === 'win') {
+                const prizeToSegment = {
+                    '50% Off': 1,
+                    '20% Off': 3,
+                    '10% Off': 5,
+                    'Box of Chocolate': 7
                 };
-                data.prize_description = prizes[targetIndex];
+                targetIndex = prizeToSegment[data.prize_label] || 1;
             } else {
                 const loseIndices = [2, 4, 6, 8];
                 targetIndex = loseIndices[Math.floor(Math.random() * loseIndices.length)];
-                data.prize_description = null;
+                resultData.prize_description = null;
             }
 
             // Calculate Rotation
-            // Center of segment N is at: (45 * N) - 22.5 degrees (Clockwise from Top)
-            // To bring that center to Top (0deg), we rotate Counter-Clockwise by that angle.
-            // Or Clockwise by (360 - Angle).
-
             const segmentCenterAngle = (45 * targetIndex) - 22.5;
             const amountToRotate = 360 - segmentCenterAngle;
 
@@ -131,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 4. Wait for animation
             setTimeout(() => {
-                handleResult(data);
+                handleResult(resultData);
             }, 4000); // Must match CSS transition duration
 
         } catch (err) {
@@ -162,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             redemptionSection.classList.add('hidden');
         }
 
-        discountCodeEl.textContent = data.discount_code;
+        discountCodeEl.textContent = data.discount_code || "LOVE10";
         resultModal.classList.add('active');
         resultModal.scrollIntoView({ behavior: 'smooth' });
     }
@@ -183,3 +163,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Trigger registration check on load
     getCustomerId();
 });
+
