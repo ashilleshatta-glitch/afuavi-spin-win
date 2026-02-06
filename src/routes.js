@@ -51,23 +51,43 @@ router.post('/spin', asyncHandler(async (req, res) => {
             throw new Error("Campaign configuration missing.");
         }
 
-        const { winners_so_far, max_winners } = limitsRes.rows[0];
-        const canWin = winners_so_far < max_winners;
+        // 1. Get Prize Tiers with remaining quota
+        const tiersRes = await client.query(
+            'SELECT * FROM prize_tiers WHERE winners_so_far < max_winners ORDER BY priority ASC FOR UPDATE'
+        );
 
-        let result = 'LOSS';
+        let won = false;
         let discountCode = null;
+        let selectedTier = null;
 
-        if (canWin) {
-            result = 'WIN';
+        if (tiersRes.rows.length > 0) {
+            // Pick the highest priority available tier
+            selectedTier = tiersRes.rows[0];
+            won = true;
             discountCode = generateDiscountCode();
 
+            // Update limits
             await client.query(
                 'UPDATE campaign_limits SET winners_so_far = winners_so_far + 1 WHERE id = 1'
             );
 
             await client.query(
-                'INSERT INTO redemptions (code, customer_id) VALUES ($1, $2)',
-                [discountCode, customerId]
+                'UPDATE prize_tiers SET winners_so_far = winners_so_far + 1 WHERE id = $1',
+                [selectedTier.id]
+            );
+
+            // Record Redemption
+            await client.query(
+                `INSERT INTO redemptions 
+                (discount_code, customer_id, prize_tier_id, prize_label, discount_percentage) 
+                VALUES ($1, $2, $3, $4, $5)`,
+                [
+                    discountCode,
+                    customerId,
+                    selectedTier.id,
+                    selectedTier.label,
+                    selectedTier.discount_percentage || 1 // Fallback for pure prizes
+                ]
             );
         }
 
@@ -77,19 +97,30 @@ router.post('/spin', asyncHandler(async (req, res) => {
             [customerId]
         );
 
+        // Record Spin
         await client.query(
-            'INSERT INTO spins (customer_id, result) VALUES ($1, $2)',
-            [customerId, result]
+            `INSERT INTO spins 
+            (customer_id, won, prize_tier_id, prize_label, discount_percentage, discount_code) 
+            VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                customerId,
+                won,
+                selectedTier ? selectedTier.id : null,
+                selectedTier ? selectedTier.label : null,
+                selectedTier ? selectedTier.discount_percentage : null,
+                discountCode
+            ]
         );
 
         await client.query('COMMIT');
 
-        if (result === 'WIN') {
+        if (won) {
             return res.json({
                 success: true,
                 won: true,
                 discount_code: discountCode,
-                message: "Congratulations! You won a discount."
+                prize_label: selectedTier.label,
+                message: `Congratulations! You won: ${selectedTier.label}`
             });
         } else {
             return res.json({
@@ -117,7 +148,7 @@ router.post('/redeem', asyncHandler(async (req, res) => {
     try {
         await client.query('BEGIN');
         const redemptionRes = await client.query(
-            'SELECT * FROM redemptions WHERE code = $1 FOR UPDATE',
+            'SELECT * FROM redemptions WHERE discount_code = $1 FOR UPDATE',
             [code]
         );
 
@@ -127,13 +158,13 @@ router.post('/redeem', asyncHandler(async (req, res) => {
         }
 
         const redemption = redemptionRes.rows[0];
-        if (redemption.is_redeemed) {
+        if (redemption.redeemed_at) { // Use redeemed_at presence as check
             await client.query('ROLLBACK');
             return apiResponse(res, 400, false, null, "Code has already been redeemed");
         }
 
         await client.query(
-            'UPDATE redemptions SET is_redeemed = TRUE, redeemed_at = NOW() WHERE code = $1',
+            'UPDATE redemptions SET redeemed_at = NOW() WHERE discount_code = $1',
             [code]
         );
 
