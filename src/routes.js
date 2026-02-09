@@ -216,13 +216,6 @@ router.post('/register', asyncHandler(async (req, res) => {
  * Securely fetch all winners for the dashboard
  */
 router.get('/admin/winners', asyncHandler(async (req, res) => {
-    const password = req.headers['x-admin-password'];
-    const validPassword = process.env.ADMIN_PASSWORD || 'admin123';
-
-    if (password !== validPassword) {
-        return apiResponse(res, 401, false, null, "Unauthorized access.");
-    }
-
     const result = await pool.query(`
         SELECT 
             s.id,
@@ -247,12 +240,6 @@ router.get('/admin/winners', asyncHandler(async (req, res) => {
  */
 router.post('/admin/redeem', asyncHandler(async (req, res) => {
     const { discount_code } = req.body;
-    const password = req.headers['x-admin-password'];
-    const validPassword = process.env.ADMIN_PASSWORD || 'admin123';
-
-    if (password !== validPassword) {
-        return apiResponse(res, 401, false, null, "Unauthorized access.");
-    }
 
     if (!discount_code) {
         return apiResponse(res, 400, false, null, "Discount code is required.");
@@ -267,5 +254,6 @@ router.post('/admin/redeem', asyncHandler(async (req, res) => {
 }));
 
 module.exports = router;
+
 
 
