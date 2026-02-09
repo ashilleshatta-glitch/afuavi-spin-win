@@ -38,9 +38,44 @@
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1.5rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-val {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-top: 0.5rem;
+            color: #fff;
+        }
+
+        .stat-val.primary {
+            color: var(--primary);
         }
 
         .table-container {
@@ -123,18 +158,38 @@
 
 <body>
 
-    <!-- MAIN DASHBOARD -->
     <header>
-        <h1>Winners Dashboard</h1>
+        <h1>Campaign Dashboard</h1>
         <div style="display:flex; gap:10px">
             <button class="action-btn" onclick="fetchWinners()"
                 style="padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; background: rgba(255,255,255,0.1); border: 1px solid var(--border)">Refresh
-                Data</button>
+                Stats</button>
         </div>
     </header>
 
     <div class="container">
         <div id="errorBox"></div>
+
+        <!-- Statistics Section -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total People Spun</div>
+                <div class="stat-val primary" id="statSpins">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Winners</div>
+                <div class="stat-val" id="statWinners">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-val" id="statRate">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Prizes Left</div>
+                <div class="stat-val" id="statRemaining">15</div>
+            </div>
+        </div>
+
         <div class="table-container">
             <table>
                 <thead>
@@ -149,7 +204,7 @@
                 </thead>
                 <tbody id="winnerTableBody">
                     <tr>
-                        <td colspan="6" style="text-align:center; padding: 4rem; color: var(--text-dim)">Fetching
+                        <td colspan="6" style="text-align:center; padding: 4rem; color: var(--text-dim)">Loading
                             campaign data...</td>
                     </tr>
                 </tbody>
@@ -168,16 +223,26 @@
                 const response = await fetch('/api/admin/winners');
 
                 if (!response.ok) {
-                    showError(`Server Error: API is missing. Please ensure src/routes.js is updated on GitHub.`);
+                    showError(`Server Error: Could not fetch data. Check if your backend is updated.`);
                     return;
                 }
 
                 const result = await response.json();
-                renderTable(result.data);
+                updateStats(result.data.stats, result.data.winners.length);
+                renderTable(result.data.winners);
 
             } catch (err) {
-                showError(`Connection Failed: The server might still be restarting. Wait 30 seconds and try again.`);
+                showError(`Connection Failed: The server might still be restarting.`);
             }
+        }
+
+        function updateStats(stats, winnersCount) {
+            document.getElementById('statSpins').textContent = stats.total_spins;
+            document.getElementById('statWinners').textContent = winnersCount;
+            document.getElementById('statRemaining').textContent = Math.max(0, 15 - winnersCount);
+
+            const rate = stats.total_spins > 0 ? ((winnersCount / stats.total_spins) * 100).toFixed(1) : 0;
+            document.getElementById('statRate').textContent = rate + '%';
         }
 
         async function markRedeemed(code) {
@@ -195,7 +260,7 @@
 
         function renderTable(winners) {
             if (!winners || winners.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:4rem; color:var(--text-dim)">No winners recorded in the database yet.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:4rem; color:var(--text-dim)">No winners recorded yet.</td></tr>';
                 return;
             }
 
