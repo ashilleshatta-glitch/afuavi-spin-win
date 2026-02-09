@@ -234,10 +234,13 @@
             </div>
             <div class="promo-info">
                 <h2 style="margin:0">Share This Campaign</h2>
-                <p style="color: var(--text-dim); margin: 0.5rem 0 1.5rem 0;">Screenshot and share your unique QR code
-                    or link to your platforms.</p>
+                <p style="color: var(--text-dim); margin: 0.5rem 0 1.5rem 0;">Share your link across Instagram,
+                    Facebook, and more.</p>
                 <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                    <button class="action-btn" onclick="copySiteLink()" id="copyBtn">Copy Link</button>
+                    <button class="action-btn" onclick="shareCampaign()"
+                        style="background: var(--primary); color: white; border: none;">📲 Share Everywhere</button>
+                    <button class="action-btn" onclick="copySiteLink()" id="copyBtn"
+                        style="background: rgba(255,255,255,0.1)">Copy Link</button>
                     <a id="waShare" href="#" target="_blank" class="share-btn">WhatsApp Share</a>
                 </div>
             </div>
@@ -301,6 +304,26 @@
             const waShare = document.getElementById('waShare');
             const shareText = encodeURIComponent(`Hey! Spin the wheel to win exclusive prizes from Afuavi! Try your luck here: ${siteUrl}`);
             waShare.href = `https://wa.me/?text=${shareText}`;
+        }
+
+        async function shareCampaign() {
+            const shareData = {
+                title: 'Spin & Win | Afuavi',
+                text: 'Try your luck and win exclusive prizes from Afuavi!',
+                url: siteUrl
+            };
+
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                } else {
+                    // Fallback to clipboard if Web Share API is not available
+                    copySiteLink();
+                    alert("Sharing menu not supported on this browser. Link copied to clipboard!");
+                }
+            } catch (err) {
+                console.log('Share failed:', err);
+            }
         }
 
         function copySiteLink() {
