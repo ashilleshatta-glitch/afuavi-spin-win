@@ -53,7 +53,7 @@ router.post('/spin', asyncHandler(async (req, res) => {
 
         // 1. Get Prize Tiers with remaining quota
         const tiersRes = await client.query(
-            'SELECT * FROM prize_tiers WHERE winners_so_far < max_winners ORDER BY priority ASC FOR UPDATE'
+            'SELECT * FROM prize_tiers WHERE winners_so_far < max_winners FOR UPDATE'
         );
 
         let won = false;
@@ -61,8 +61,9 @@ router.post('/spin', asyncHandler(async (req, res) => {
         let selectedTier = null;
 
         if (tiersRes.rows.length > 0) {
-            // Pick the highest priority available tier
-            selectedTier = tiersRes.rows[0];
+            // Pick a RANDOM tier from the available ones
+            const availableTiers = tiersRes.rows;
+            selectedTier = availableTiers[Math.floor(Math.random() * availableTiers.length)];
             won = true;
             discountCode = generateDiscountCode();
 
@@ -260,3 +261,4 @@ router.post('/admin/redeem', asyncHandler(async (req, res) => {
 }));
 
 module.exports = router;
+
