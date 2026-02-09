@@ -37,66 +37,6 @@
             z-index: 10;
         }
 
-        #loginOverlay {
-            position: fixed;
-            inset: 0;
-            background: var(--bg);
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .login-card {
-            background: var(--surface);
-            padding: 2.5rem;
-            border-radius: 1.5rem;
-            border: 1px solid var(--border);
-            text-align: center;
-            width: 350px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        input {
-            width: 100%;
-            padding: 0.8rem;
-            margin: 1rem 0;
-            border-radius: 0.75rem;
-            border: 1px solid var(--border);
-            background: #000;
-            color: white;
-            font-size: 1rem;
-            text-align: center;
-            outline: none;
-        }
-
-        input:focus {
-            border-color: var(--primary);
-        }
-
-        .primary-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 1rem;
-            border-radius: 0.75rem;
-            cursor: pointer;
-            font-weight: 700;
-            width: 100%;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-
-        .primary-btn:hover {
-            opacity: 0.9;
-        }
-
-        .primary-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         .container {
             max-width: 1100px;
             margin: 2rem auto;
@@ -178,43 +118,23 @@
             display: none;
             border: 1px solid rgba(239, 68, 68, 0.2);
         }
-
-        .hidden {
-            display: none !important;
-        }
     </style>
 </head>
 
 <body>
 
-    <!-- LOGIN SCREEN -->
-    <div id="loginOverlay">
-        <div class="login-card">
-            <h2 style="margin:0 0 0.5rem 0">Admin Portal</h2>
-            <p style="color: var(--text-dim); font-size: 0.9rem">Access the winners list</p>
-
-            <input type="password" id="passInput" placeholder="Enter Password" value="">
-            <button class="primary-btn" id="accessBtn">Unlock Dashboard</button>
-
-            <div id="errorBox"></div>
-            <p style="margin-top: 1.5rem; font-size: 0.75rem; color: var(--text-dim)">Default Password: <b
-                    style="color: white">admin123</b></p>
-        </div>
-    </div>
-
     <!-- MAIN DASHBOARD -->
     <header>
-        <h1>Winners & Claims</h1>
+        <h1>Winners Dashboard</h1>
         <div style="display:flex; gap:10px">
-            <button class="primary-btn" onclick="fetchWinners()"
-                style="padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; background: rgba(255,255,255,0.1)">Refresh
+            <button class="action-btn" onclick="fetchWinners()"
+                style="padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; background: rgba(255,255,255,0.1); border: 1px solid var(--border)">Refresh
                 Data</button>
-            <button onclick="logout()"
-                style="background:none; color:var(--text-dim); border:none; cursor:pointer; font-size: 0.9rem">Logout</button>
         </div>
     </header>
 
     <div class="container">
+        <div id="errorBox"></div>
         <div class="table-container">
             <table>
                 <thead>
@@ -238,38 +158,14 @@
     </div>
 
     <script>
-        const accessBtn = document.getElementById('accessBtn');
-        const passInput = document.getElementById('passInput');
         const errorBox = document.getElementById('errorBox');
-        const overlay = document.getElementById('loginOverlay');
         const tableBody = document.getElementById('winnerTableBody');
 
-        let savedPass = localStorage.getItem('master_admin_key') || '';
-
-        // BUTTON CLICK LOGIC
-        accessBtn.addEventListener('click', () => {
-            savedPass = passInput.value;
-            if (!savedPass) return showError("Please enter a password.");
-            fetchWinners();
-        });
-
-        // ENTER KEY LOGIC
-        passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') accessBtn.click(); });
-
         async function fetchWinners() {
-            accessBtn.disabled = true;
-            accessBtn.textContent = "Connecting...";
             errorBox.style.display = 'none';
 
             try {
-                const response = await fetch('/api/admin/winners', {
-                    headers: { 'x-admin-password': savedPass }
-                });
-
-                if (response.status === 401) {
-                    showError("Incorrect Password. Try 'admin123'");
-                    return;
-                }
+                const response = await fetch('/api/admin/winners');
 
                 if (!response.ok) {
                     showError(`Server Error: API is missing. Please ensure src/routes.js is updated on GitHub.`);
@@ -277,17 +173,10 @@
                 }
 
                 const result = await response.json();
-
-                // IF WE ARE HERE, LOGIN WORKED!
-                overlay.classList.add('hidden');
-                localStorage.setItem('master_admin_key', savedPass);
                 renderTable(result.data);
 
             } catch (err) {
                 showError(`Connection Failed: The server might still be restarting. Wait 30 seconds and try again.`);
-            } finally {
-                accessBtn.disabled = false;
-                accessBtn.textContent = "Unlock Dashboard";
             }
         }
 
@@ -296,7 +185,7 @@
             try {
                 const res = await fetch('/api/admin/redeem', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-admin-password': savedPass },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ discount_code: code })
                 });
                 if (res.ok) fetchWinners();
@@ -331,17 +220,10 @@
         function showError(msg) {
             errorBox.textContent = msg;
             errorBox.style.display = 'block';
-            accessBtn.disabled = false;
-            accessBtn.textContent = "Unlock Dashboard";
         }
 
-        function logout() {
-            localStorage.removeItem('master_admin_key');
-            location.reload();
-        }
-
-        // Auto-access if already logged in
-        if (savedPass) fetchWinners();
+        // Initial Load
+        fetchWinners();
 
     </script>
 </body>
