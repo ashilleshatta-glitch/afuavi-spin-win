@@ -81,7 +81,7 @@
             box-sizing: border-box;
         }
 
-        button {
+        button.primary-btn {
             background: var(--primary);
             color: white;
             border: none;
@@ -96,7 +96,7 @@
         .table-container {
             background: var(--surface);
             border-radius: 1rem;
-            overflow: hidden;
+            overflow: auto;
             border: 1px solid var(--border);
         }
 
@@ -104,6 +104,7 @@
             width: 100%;
             border-collapse: collapse;
             text-align: left;
+            min-width: 600px;
         }
 
         th {
@@ -139,6 +140,22 @@
         .badge-redeemed {
             background: rgba(59, 130, 246, 0.1);
             color: #3b82f6;
+        }
+
+        .redeem-btn {
+            background: transparent;
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.4rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .redeem-btn:hover {
+            background: var(--success);
+            color: white;
         }
 
         .code {
@@ -186,19 +203,23 @@
             <h2>Admin Login</h2>
             <p style="color: grey; font-size: 0.85rem;">Enter password to view winners</p>
             <input type="password" id="adminPass" placeholder="Password">
-            <button onclick="login()">Access Dashboard</button>
+            <button class="primary-btn" onclick="login()">Access Dashboard</button>
             <p id="loginError" style="color: #ff6b9d; margin-top: 1rem;" class="hidden">Incorrect password</p>
         </div>
     </div>
 
     <header>
         <h1>Winners Dashboard</h1>
-        <button onclick="logout()"
-            style="width: auto; background: transparent; border: 1px solid var(--border)">Logout</button>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="fetchWinners()"
+                style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer;">Refresh</button>
+            <button onclick="logout()"
+                style="padding: 0.5rem 1rem; background: transparent; color: var(--text-dim); border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer;">Logout</button>
+        </div>
     </header>
 
-    <div class="container">
-        <div class="stats-grid" id="statsGrid">
+    <div class="container" id="mainDashboard">
+        <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-label">Total Winners</div>
                 <div class="stat-val" id="countWinners">0</div>
@@ -218,6 +239,7 @@
                         <th>Prize</th>
                         <th>Code</th>
                         <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="winnersTable">
@@ -249,6 +271,29 @@
             }
         }
 
+        async function markAsRedeemed(code) {
+            if (!confirm(`Mark code ${code} as redeemed?`)) return;
+
+            try {
+                const response = await fetch('/api/admin/redeem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-password': adminPassword
+                    },
+                    body: JSON.stringify({ discount_code: code })
+                });
+
+                if (response.ok) {
+                    fetchWinners(); // Refresh table
+                } else {
+                    alert("Redemption failed. Check console.");
+                }
+            } catch (err) {
+                console.error("Redemption failed", err);
+            }
+        }
+
         function renderWinners(winners) {
             const tbody = document.getElementById('winnersTable');
             tbody.innerHTML = '';
@@ -262,13 +307,18 @@
                     ? `<span class="badge badge-redeemed">Redeemed</span>`
                     : `<span class="badge badge-pending">Waiting</span>`;
 
+                const action = w.redeemed_at
+                    ? `<span style="opacity: 0.3; font-size: 0.8rem">Done</span>`
+                    : `<button class="redeem-btn" onclick="markAsRedeemed('${w.discount_code}')">Redeem</button>`;
+
                 const row = `
                     <tr>
                         <td style="font-size: 0.85rem; color: var(--text-dim)">${date}</td>
-                        <td>${w.email}</td>
+                        <td style="font-size: 0.9rem">${w.email}</td>
                         <td style="font-weight: 600">${w.prize_label}</td>
                         <td><span class="code">${w.discount_code}</span></td>
                         <td>${status}</td>
+                        <td>${action}</td>
                     </tr>
                 `;
                 tbody.insertAdjacentHTML('beforeend', row);
