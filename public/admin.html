@@ -241,7 +241,7 @@
                         style="background: var(--primary); color: white; border: none;">📲 Share Everywhere</button>
                     <button class="action-btn" onclick="copySiteLink()" id="copyBtn"
                         style="background: rgba(255,255,255,0.1)">Copy Link</button>
-                    <a id="waShare" href="#" target="_blank" class="share-btn">WhatsApp Share</a>
+                    <button onclick="shareToWhatsApp()" class="share-btn">WhatsApp Share</button>
                 </div>
             </div>
         </div>
@@ -294,16 +294,17 @@
         const errorBox = document.getElementById('errorBox');
         const siteUrl = window.location.origin;
 
+        function shareToWhatsApp() {
+            const shareText = `Check this out! Spin the wheel to win exclusive prizes from Afuavi! Try your luck here: ${siteUrl}`;
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            window.open(waUrl, '_blank');
+        }
+
         // --- PROMOTION TOOLS ---
         function setupPromotion() {
             // Generate QR Code using a public API
             const qrImage = document.getElementById('qrCode');
             qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(siteUrl)}`;
-
-            // Setup WhatsApp Share Link
-            const waShare = document.getElementById('waShare');
-            const shareText = encodeURIComponent(`Hey! Spin the wheel to win exclusive prizes from Afuavi! Try your luck here: ${siteUrl}`);
-            waShare.href = `https://wa.me/?text=${shareText}`;
         }
 
         async function shareCampaign() {
