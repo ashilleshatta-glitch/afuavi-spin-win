@@ -58,8 +58,10 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO prize_tiers (label, prize_type, discount_percentage, max_winners, winners_so_far, priority)
 VALUES
-  ('50% Off', 'discount', 50, 2, 0, 1),
-  ('20% Off', 'discount', 20, 4, 0, 2),
-  ('Box of Chocolate', 'prize', NULL, 4, 0, 3),
-  ('10% Off', 'discount', 10, 5, 0, 4)
+  ('30% Off', 'discount', 30, 1, 0, 1),
+  ('20% Off', 'discount', 20, 2, 0, 2),
+  ('10% Off', 'discount', 10, 3, 0, 3),
+  ('5% Off', 'discount', 5, 7, 0, 4),
+  ('Box of Chocolate', 'prize', NULL, 2, 0, 5)
 ON CONFLICT (label) DO NOTHING;
+
