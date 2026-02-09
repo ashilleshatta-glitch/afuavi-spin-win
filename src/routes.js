@@ -241,6 +241,31 @@ router.get('/admin/winners', asyncHandler(async (req, res) => {
     return apiResponse(res, 200, true, result.rows, "Winners fetched successfully");
 }));
 
+/**
+ * POST /api/admin/redeem
+ * Manually mark a code as redeemed by the admin
+ */
+router.post('/admin/redeem', asyncHandler(async (req, res) => {
+    const { discount_code } = req.body;
+    const password = req.headers['x-admin-password'];
+    const validPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    if (password !== validPassword) {
+        return apiResponse(res, 401, false, null, "Unauthorized access.");
+    }
+
+    if (!discount_code) {
+        return apiResponse(res, 400, false, null, "Discount code is required.");
+    }
+
+    await pool.query(
+        'UPDATE redemptions SET redeemed_at = NOW() WHERE discount_code = $1',
+        [discount_code]
+    );
+
+    return apiResponse(res, 200, true, null, "Prize marked as redeemed.");
+}));
+
 module.exports = router;
 
 
