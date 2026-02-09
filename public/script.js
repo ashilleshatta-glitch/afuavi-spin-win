@@ -86,14 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (resultData.status === 'win') {
                 const prizeToSegment = {
-                    '50% Off': 1,
+                    '30% Off': 1,
                     '20% Off': 3,
                     '10% Off': 5,
+                    '5% Off': 6,
                     'Box of Chocolate': 7
                 };
                 targetIndex = prizeToSegment[data.prize_label] || 1;
             } else {
-                const loseIndices = [2, 4, 6, 8];
+                const loseIndices = [2, 4, 8];
                 targetIndex = loseIndices[Math.floor(Math.random() * loseIndices.length)];
                 resultData.prize_description = null;
             }
@@ -163,4 +164,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Trigger registration check on load
     getCustomerId();
 });
+
 
