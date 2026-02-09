@@ -216,14 +216,10 @@ router.post('/register', asyncHandler(async (req, res) => {
  * Securely fetch all winners for the dashboard
  */
 router.get('/admin/winners', asyncHandler(async (req, res) => {
-    const result = await pool.query(`
+    // Get winners
+    const winnersRes = await pool.query(`
         SELECT 
-            s.id,
-            c.email, 
-            s.prize_label, 
-            s.discount_code, 
-            s.created_at,
-            r.redeemed_at
+            s.id, c.email, s.prize_label, s.discount_code, s.created_at, r.redeemed_at
         FROM spins s
         JOIN customers c ON s.customer_id = c.id
         LEFT JOIN redemptions r ON r.discount_code = s.discount_code
@@ -231,7 +227,17 @@ router.get('/admin/winners', asyncHandler(async (req, res) => {
         ORDER BY s.created_at DESC
     `);
 
-    return apiResponse(res, 200, true, result.rows, "Winners fetched successfully");
+    // Get total spins
+    const statsRes = await pool.query(`
+        SELECT 
+            (SELECT COUNT(*) FROM spins) as total_spins,
+            (SELECT COUNT(*) FROM customers) as total_customers
+    `);
+
+    return apiResponse(res, 200, true, {
+        winners: winnersRes.rows,
+        stats: statsRes.rows[0]
+    }, "Data fetched successfully");
 }));
 
 /**
