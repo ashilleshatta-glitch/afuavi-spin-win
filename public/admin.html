@@ -43,7 +43,6 @@
             padding: 0 1.5rem;
         }
 
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -134,14 +133,6 @@
             font-size: 0.85rem;
         }
 
-        .code-val {
-            font-family: monospace;
-            font-weight: 800;
-            color: var(--primary);
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-        }
-
         #liveIndicator {
             font-size: 0.75rem;
             color: var(--success);
@@ -192,34 +183,30 @@
     <header>
         <div>
             <h1 style="margin-bottom: 4px;">Live Management Dashboard</h1>
-            <div id="liveIndicator"><span class="dot"></span> Connection Active: Monitoring Database...</div>
+            <div id="liveIndicator"><span class="dot"></span> Connection Active: Listening for Spins...</div>
         </div>
-        <div style="display:flex; gap:10px">
-            <button class="action-btn" onclick="fetchWinners()"
-                style="padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; background: rgba(255,255,255,0.1); border: 1px solid var(--border)">Pulse
-                Sync</button>
-        </div>
+        <button class="action-btn" onclick="fetchWinners()"
+            style="background: rgba(255,255,255,0.1); border: 1px solid var(--border)">Manual Refresh</button>
     </header>
 
     <div class="container">
         <div id="errorBox"></div>
 
-        <!-- Live Statistics Counter -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Real-Time Spins</div>
-                <div class="stat-val primary" id="statSpins">0</div>
+                <div class="stat-label">Total Visitors (Potential)</div>
+                <div class="stat-val primary" id="statVisitors">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Actual Spins Performed</div>
+                <div class="stat-val" id="statSpins">0</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Confirmed Winners</div>
                 <div class="stat-val" id="statWinners">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Win Rate</div>
-                <div class="stat-val" id="statRate">0%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Active Prizes Left</div>
+                <div class="stat-label">Prizes Left</div>
                 <div class="stat-val" id="statRemaining">15</div>
             </div>
         </div>
@@ -247,85 +234,65 @@
     </div>
 
     <script>
-        const errorBox = document.getElementById('errorBox');
         const tableBody = document.getElementById('winnerTableBody');
+        const errorBox = document.getElementById('errorBox');
 
         async function fetchWinners() {
             try {
                 const response = await fetch('/api/admin/winners');
-
-                if (!response.ok) {
-                    showError(`Server Error: Could not reach backend API.`);
-                    return;
-                }
+                if (!response.ok) throw new Error("Server not responding correctly.");
 
                 const result = await response.json();
-                updateStats(result.data.stats, result.data.winners.length);
+
+                // Update Numeric Stats
+                document.getElementById('statVisitors').textContent = result.data.stats.total_customers;
+                document.getElementById('statSpins').textContent = result.data.stats.total_spins;
+                document.getElementById('statWinners').textContent = result.data.winners.length;
+                document.getElementById('statRemaining').textContent = Math.max(0, 15 - result.data.winners.length);
+
                 renderTable(result.data.winners);
                 errorBox.style.display = 'none';
 
             } catch (err) {
-                showError(`Sync Lost: Reconnecting to server...`);
+                console.error(err);
+                errorBox.textContent = "Sync Error: Check your Render logs.";
+                errorBox.style.display = 'block';
             }
-        }
-
-        function updateStats(stats, winnersCount) {
-            document.getElementById('statSpins').textContent = stats.total_spins;
-            document.getElementById('statWinners').textContent = winnersCount;
-            document.getElementById('statRemaining').textContent = Math.max(0, 15 - winnersCount);
-
-            const rate = stats.total_spins > 0 ? ((winnersCount / stats.total_spins) * 100).toFixed(1) : 0;
-            document.getElementById('statRate').textContent = rate + '%';
         }
 
         async function markRedeemed(code) {
             if (!confirm(`Mark code ${code} as redeemed?`)) return;
-            try {
-                const res = await fetch('/api/admin/redeem', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ discount_code: code })
-                });
-                if (res.ok) fetchWinners();
-            } catch (e) { alert("Action failed."); }
+            await fetch('/api/admin/redeem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discount_code: code })
+            });
+            fetchWinners();
         }
 
         function renderTable(winners) {
             if (!winners || winners.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:4rem; color:var(--text-dim)">Waiting for the first winner...</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:4rem; color:var(--text-dim)">No winners found yet.</td></tr>';
                 return;
             }
-
             tableBody.innerHTML = winners.map(w => {
                 const time = new Date(w.created_at).toLocaleString();
                 const isUsed = !!w.redeemed_at;
                 return `
                     <tr>
-                        <td style="font-size: 0.85rem; color: var(--text-dim)">${time}</td>
-                        <td style="font-weight: 600; color: #fff">${w.email}</td>
-                        <td style="font-weight: 700; color: var(--primary)">${w.prize_label}</td>
-                        <td><span class="code-val">${w.discount_code}</span></td>
+                        <td style="font-size:0.85rem">${time}</td>
+                        <td style="font-weight:600">${w.email}</td>
+                        <td style="color:var(--primary); font-weight:700">${w.prize_label}</td>
+                        <td style="font-family:monospace; font-weight:bold">${w.discount_code}</td>
                         <td><span class="badge ${isUsed ? 'badge-redeemed' : 'badge-pending'}">${isUsed ? 'Redeemed' : 'Active'}</span></td>
-                        <td>
-                            ${isUsed ? '<span style="opacity:0.3; font-size:0.8rem">Finished</span>' : `<button class="action-btn" onclick="markRedeemed('${w.discount_code}')">Lock & Claim</button>`}
-                        </td>
+                        <td>${isUsed ? '' : `<button class="action-btn" onclick="markRedeemed('${w.discount_code}')">Redeem</button>`}</td>
                     </tr>
                 `;
             }).join('');
         }
 
-        function showError(msg) {
-            errorBox.textContent = msg;
-            errorBox.style.display = 'block';
-        }
-
-        // --- REAL-TIME REFRESH LOGIC ---
-        // Automatically fetch data every 10 seconds
-        setInterval(fetchWinners, 10000);
-
-        // Initial Load
+        setInterval(fetchWinners, 5000); // Check every 5 seconds for ultimate precision
         fetchWinners();
-
     </script>
 </body>
 
