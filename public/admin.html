@@ -142,6 +142,37 @@
             letter-spacing: 1px;
         }
 
+        #liveIndicator {
+            font-size: 0.75rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 0.2;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.2;
+            }
+        }
+
         #errorBox {
             margin-top: 1.5rem;
             color: #ef4444;
@@ -159,25 +190,28 @@
 <body>
 
     <header>
-        <h1>Campaign Dashboard</h1>
+        <div>
+            <h1 style="margin-bottom: 4px;">Live Management Dashboard</h1>
+            <div id="liveIndicator"><span class="dot"></span> Connection Active: Monitoring Database...</div>
+        </div>
         <div style="display:flex; gap:10px">
             <button class="action-btn" onclick="fetchWinners()"
-                style="padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; background: rgba(255,255,255,0.1); border: 1px solid var(--border)">Refresh
-                Stats</button>
+                style="padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; background: rgba(255,255,255,0.1); border: 1px solid var(--border)">Pulse
+                Sync</button>
         </div>
     </header>
 
     <div class="container">
         <div id="errorBox"></div>
 
-        <!-- Statistics Section -->
+        <!-- Live Statistics Counter -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Total People Spun</div>
+                <div class="stat-label">Real-Time Spins</div>
                 <div class="stat-val primary" id="statSpins">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Total Winners</div>
+                <div class="stat-label">Confirmed Winners</div>
                 <div class="stat-val" id="statWinners">0</div>
             </div>
             <div class="stat-card">
@@ -185,7 +219,7 @@
                 <div class="stat-val" id="statRate">0%</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Prizes Left</div>
+                <div class="stat-label">Active Prizes Left</div>
                 <div class="stat-val" id="statRemaining">15</div>
             </div>
         </div>
@@ -196,16 +230,16 @@
                     <tr>
                         <th width="20%">Date & Time</th>
                         <th width="25%">Winner Email/ID</th>
-                        <th width="15%">Prize</th>
-                        <th width="20%">Discount Code</th>
+                        <th width="15%">Prize Won</th>
+                        <th width="20%">Unique Discount Code</th>
                         <th width="10%">Status</th>
                         <th width="10%">Action</th>
                     </tr>
                 </thead>
                 <tbody id="winnerTableBody">
                     <tr>
-                        <td colspan="6" style="text-align:center; padding: 4rem; color: var(--text-dim)">Loading
-                            campaign data...</td>
+                        <td colspan="6" style="text-align:center; padding: 4rem; color: var(--text-dim)">Initializing
+                            live feed...</td>
                     </tr>
                 </tbody>
             </table>
@@ -217,22 +251,21 @@
         const tableBody = document.getElementById('winnerTableBody');
 
         async function fetchWinners() {
-            errorBox.style.display = 'none';
-
             try {
                 const response = await fetch('/api/admin/winners');
 
                 if (!response.ok) {
-                    showError(`Server Error: Could not fetch data. Check if your backend is updated.`);
+                    showError(`Server Error: Could not reach backend API.`);
                     return;
                 }
 
                 const result = await response.json();
                 updateStats(result.data.stats, result.data.winners.length);
                 renderTable(result.data.winners);
+                errorBox.style.display = 'none';
 
             } catch (err) {
-                showError(`Connection Failed: The server might still be restarting.`);
+                showError(`Sync Lost: Reconnecting to server...`);
             }
         }
 
@@ -254,13 +287,12 @@
                     body: JSON.stringify({ discount_code: code })
                 });
                 if (res.ok) fetchWinners();
-                else alert("Could not update. Try again.");
-            } catch (e) { alert("Network error."); }
+            } catch (e) { alert("Action failed."); }
         }
 
         function renderTable(winners) {
             if (!winners || winners.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:4rem; color:var(--text-dim)">No winners recorded yet.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:4rem; color:var(--text-dim)">Waiting for the first winner...</td></tr>';
                 return;
             }
 
@@ -275,7 +307,7 @@
                         <td><span class="code-val">${w.discount_code}</span></td>
                         <td><span class="badge ${isUsed ? 'badge-redeemed' : 'badge-pending'}">${isUsed ? 'Redeemed' : 'Active'}</span></td>
                         <td>
-                            ${isUsed ? '<span style="opacity:0.3; font-size:0.8rem">Finished</span>' : `<button class="action-btn" onclick="markRedeemed('${w.discount_code}')">Claim</button>`}
+                            ${isUsed ? '<span style="opacity:0.3; font-size:0.8rem">Finished</span>' : `<button class="action-btn" onclick="markRedeemed('${w.discount_code}')">Lock & Claim</button>`}
                         </td>
                     </tr>
                 `;
@@ -286,6 +318,10 @@
             errorBox.textContent = msg;
             errorBox.style.display = 'block';
         }
+
+        // --- REAL-TIME REFRESH LOGIC ---
+        // Automatically fetch data every 10 seconds
+        setInterval(fetchWinners, 10000);
 
         // Initial Load
         fetchWinners();
