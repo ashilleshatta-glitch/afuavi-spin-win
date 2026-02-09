@@ -14,6 +14,7 @@
             --text: #f8fafc;
             --text-dim: #94a3b8;
             --success: #22c55e;
+            --error: #ef4444;
             --border: rgba(255, 255, 255, 0.1);
         }
 
@@ -68,6 +69,7 @@
             border: 1px solid var(--border);
             text-align: center;
             width: 320px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
         }
 
         input {
@@ -79,6 +81,7 @@
             background: #000;
             color: white;
             box-sizing: border-box;
+            font-size: 1rem;
         }
 
         button.primary-btn {
@@ -90,6 +93,12 @@
             cursor: pointer;
             font-weight: 600;
             width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        button.primary-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* Winners Table */
@@ -125,11 +134,6 @@
             border-radius: 1rem;
             font-size: 0.75rem;
             font-weight: 600;
-        }
-
-        .badge-win {
-            background: rgba(34, 197, 94, 0.1);
-            color: var(--success);
         }
 
         .badge-pending {
@@ -193,6 +197,12 @@
             color: var(--text-dim);
             font-size: 0.9rem;
         }
+
+        #loginStatus {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            min-height: 1.2rem;
+        }
     </style>
 </head>
 
@@ -202,9 +212,9 @@
         <div class="login-card">
             <h2>Admin Login</h2>
             <p style="color: grey; font-size: 0.85rem;">Enter password to view winners</p>
-            <input type="password" id="adminPass" placeholder="Password">
-            <button class="primary-btn" onclick="login()">Access Dashboard</button>
-            <p id="loginError" style="color: #ff6b9d; margin-top: 1rem;" class="hidden">Incorrect password</p>
+            <input type="password" id="adminPass" placeholder="Password" onkeypress="if(event.key === 'Enter') login()">
+            <button class="primary-btn" id="loginBtn" onclick="login()">Access Dashboard</button>
+            <div id="loginStatus"></div>
         </div>
     </div>
 
@@ -235,7 +245,7 @@
                 <thead>
                     <tr>
                         <th>Time</th>
-                        <th>Winner ID/Email</th>
+                        <th>Winner Email/ID</th>
                         <th>Prize</th>
                         <th>Code</th>
                         <th>Status</th>
@@ -251,23 +261,41 @@
 
     <script>
         let adminPassword = localStorage.getItem('admin_pass') || '';
+        const loginStatus = document.getElementById('loginStatus');
+        const loginBtn = document.getElementById('loginBtn');
 
         async function fetchWinners() {
+            setLoading(true);
+            loginStatus.innerHTML = "";
+
             try {
                 const response = await fetch('/api/admin/winners', {
                     headers: { 'x-admin-password': adminPassword }
                 });
 
                 if (response.status === 401) {
-                    showLogin();
+                    showLogin("Incorrect password. Please try again.");
+                    setLoading(false);
                     return;
                 }
 
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+
                 const data = await response.json();
-                renderWinners(data.data);
-                hideLogin();
+
+                if (data.success) {
+                    renderWinners(data.data);
+                    hideLogin();
+                } else {
+                    showLogin(data.message || "Login failed");
+                }
             } catch (err) {
                 console.error("Fetch failed", err);
+                showLogin(`Error: ${err.message}. Ensure server is running.`);
+            } finally {
+                setLoading(false);
             }
         }
 
@@ -285,12 +313,12 @@
                 });
 
                 if (response.ok) {
-                    fetchWinners(); // Refresh table
+                    fetchWinners();
                 } else {
-                    alert("Redemption failed. Check console.");
+                    alert("Update failed. Please try again.");
                 }
             } catch (err) {
-                console.error("Redemption failed", err);
+                alert("Network error. Check connection.");
             }
         }
 
@@ -300,6 +328,11 @@
 
             document.getElementById('countWinners').textContent = winners.length;
             document.getElementById('countRemaining').textContent = Math.max(0, 15 - winners.length);
+
+            if (winners.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim)">No winners yet.</td></tr>';
+                return;
+            }
 
             winners.forEach(w => {
                 const date = new Date(w.created_at).toLocaleString();
@@ -314,7 +347,7 @@
                 const row = `
                     <tr>
                         <td style="font-size: 0.85rem; color: var(--text-dim)">${date}</td>
-                        <td style="font-size: 0.9rem">${w.email}</td>
+                        <td style="font-size: 0.95rem">${w.email}</td>
                         <td style="font-weight: 600">${w.prize_label}</td>
                         <td><span class="code">${w.discount_code}</span></td>
                         <td>${status}</td>
@@ -327,13 +360,19 @@
 
         function login() {
             const pass = document.getElementById('adminPass').value;
+            if (!pass) {
+                showLogin("Please enter a password.");
+                return;
+            }
             adminPassword = pass;
             fetchWinners();
         }
 
-        function showLogin() {
+        function showLogin(msg) {
             document.getElementById('loginOverlay').classList.remove('hidden');
-            if (adminPassword) document.getElementById('loginError').classList.remove('hidden');
+            if (msg) {
+                loginStatus.innerHTML = `<span style="color: var(--error)">${msg}</span>`;
+            }
         }
 
         function hideLogin() {
@@ -344,6 +383,11 @@
         function logout() {
             localStorage.removeItem('admin_pass');
             location.reload();
+        }
+
+        function setLoading(loading) {
+            loginBtn.disabled = loading;
+            loginBtn.textContent = loading ? "Authenticating..." : "Access Dashboard";
         }
 
         // Initial Load
