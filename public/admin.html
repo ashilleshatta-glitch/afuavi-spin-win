@@ -68,13 +68,13 @@
             border-radius: 1rem;
             border: 1px solid var(--border);
             text-align: center;
-            width: 320px;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+            width: 350px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
         input {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.8rem;
             margin: 1rem 0;
             border-radius: 0.5rem;
             border: 1px solid var(--border);
@@ -82,26 +82,34 @@
             color: white;
             box-sizing: border-box;
             font-size: 1rem;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary);
         }
 
         button.primary-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.8rem;
             border-radius: 0.5rem;
             cursor: pointer;
             font-weight: 600;
             width: 100%;
-            transition: opacity 0.2s;
+            transition: transform 0.1s;
+        }
+
+        button.primary-btn:active {
+            transform: scale(0.98);
         }
 
         button.primary-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
         }
 
-        /* Winners Table */
         .table-container {
             background: var(--surface);
             border-radius: 1rem;
@@ -112,49 +120,49 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            text-align: left;
-            min-width: 600px;
+            min-width: 700px;
         }
 
         th {
             background: rgba(0, 0, 0, 0.2);
             padding: 1rem;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             color: var(--text-dim);
+            text-align: left;
         }
 
         td {
             padding: 1rem;
             border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
         }
 
         .badge {
-            padding: 0.25rem 0.6rem;
+            padding: 0.3rem 0.7rem;
             border-radius: 1rem;
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .badge-pending {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
         }
 
         .badge-redeemed {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
         }
 
         .redeem-btn {
-            background: transparent;
+            background: rgba(34, 197, 94, 0.1);
             border: 1px solid var(--success);
             color: var(--success);
-            padding: 0.4rem 0.8rem;
-            border-radius: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
             cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
+            font-weight: 600;
         }
 
         .redeem-btn:hover {
@@ -162,10 +170,10 @@
             color: white;
         }
 
-        .code {
+        .code-text {
             font-family: monospace;
+            font-weight: 800;
             color: var(--primary);
-            font-weight: bold;
             font-size: 1.1rem;
         }
 
@@ -173,35 +181,15 @@
             display: none !important;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--surface);
-            padding: 1.5rem;
-            border-radius: 1rem;
-            border: 1px solid var(--border);
-        }
-
-        .stat-val {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-top: 0.5rem;
-        }
-
-        .stat-label {
-            color: var(--text-dim);
-            font-size: 0.9rem;
-        }
-
-        #loginStatus {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            min-height: 1.2rem;
+        #debugInfo {
+            margin-top: 1.5rem;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            color: #ef4444;
+            text-align: left;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -210,190 +198,152 @@
 
     <div id="loginOverlay">
         <div class="login-card">
-            <h2>Admin Login</h2>
-            <p style="color: grey; font-size: 0.85rem;">Enter password to view winners</p>
-            <input type="password" id="adminPass" placeholder="Password" onkeypress="if(event.key === 'Enter') login()">
-            <button class="primary-btn" id="loginBtn" onclick="login()">Access Dashboard</button>
-            <div id="loginStatus"></div>
+            <h2 style="margin-top:0">Admin Access</h2>
+            <p style="color: var(--text-dim); font-size: 0.9rem;">Password: <b>admin123</b></p>
+
+            <input type="password" id="adminPass" placeholder="Enter Password" autocomplete="current-password">
+            <button class="primary-btn" id="loginBtn">Access Dashboard</button>
+
+            <div id="debugInfo" class="hidden"></div>
         </div>
     </div>
 
     <header>
-        <h1>Winners Dashboard</h1>
-        <div style="display: flex; gap: 10px;">
+        <h1>Winners & Prizes</h1>
+        <div style="display:flex; gap:10px">
             <button onclick="fetchWinners()"
-                style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer;">Refresh</button>
+                style="background:none; color:var(--text); border:1px solid var(--border); padding:0.5rem 1rem; border-radius:0.5rem; cursor:pointer">Refresh</button>
             <button onclick="logout()"
-                style="padding: 0.5rem 1rem; background: transparent; color: var(--text-dim); border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer;">Logout</button>
+                style="background:none; color:var(--text-dim); border:none; cursor:pointer">Logout</button>
         </div>
     </header>
 
-    <div class="container" id="mainDashboard">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Winners</div>
-                <div class="stat-val" id="countWinners">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Remaining Slots</div>
-                <div class="stat-val" id="countRemaining">15</div>
-            </div>
-        </div>
-
+    <div class="container">
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Time</th>
-                        <th>Winner Email/ID</th>
-                        <th>Prize</th>
-                        <th>Code</th>
+                        <th>Date/Time</th>
+                        <th>Winner Email</th>
+                        <th>Prize Won</th>
+                        <th>Discount Code</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="winnersTable">
-                    <!-- Rows will be added here -->
+                    <tr>
+                        <td colspan="6" style="text-align:center; color:var(--text-dim)">Loading winners...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        let adminPassword = localStorage.getItem('admin_pass') || '';
-        const loginStatus = document.getElementById('loginStatus');
         const loginBtn = document.getElementById('loginBtn');
+        const passInput = document.getElementById('adminPass');
+        const debugInfo = document.getElementById('debugInfo');
+        const overlay = document.getElementById('loginOverlay');
+        const tableBody = document.getElementById('winnersTable');
+
+        let currentPass = localStorage.getItem('spin_admin_pass') || '';
+
+        // Handle Access Button
+        loginBtn.addEventListener('click', () => {
+            currentPass = passInput.value;
+            if (!currentPass) return alert("Please enter the password.");
+            fetchWinners();
+        });
+
+        // Handle Enter Key
+        passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') loginBtn.click(); });
 
         async function fetchWinners() {
-            setLoading(true);
-            loginStatus.innerHTML = "";
+            loginBtn.disabled = true;
+            loginBtn.textContent = "Checking...";
+            debugInfo.classList.add('hidden');
 
             try {
-                const response = await fetch('/api/admin/winners', {
-                    headers: { 'x-admin-password': adminPassword }
+                const res = await fetch('/api/admin/winners', {
+                    headers: { 'x-admin-password': currentPass }
                 });
 
-                if (response.status === 401) {
-                    showLogin("Incorrect password. Please try again.");
-                    setLoading(false);
+                if (res.status === 401) {
+                    showError("Incorrect Password. Try 'admin123'");
                     return;
                 }
 
-                if (!response.ok) {
-                    throw new Error(`Server returned ${response.status}`);
+                if (!res.ok) {
+                    showError(`Server Error: ${res.status} ${res.statusText}`);
+                    return;
                 }
 
-                const data = await response.json();
+                const json = await res.json();
+                renderTable(json.data);
 
-                if (data.success) {
-                    renderWinners(data.data);
-                    hideLogin();
-                } else {
-                    showLogin(data.message || "Login failed");
-                }
+                // If we get here, login worked
+                overlay.classList.add('hidden');
+                localStorage.setItem('spin_admin_pass', currentPass);
+
             } catch (err) {
-                console.error("Fetch failed", err);
-                showLogin(`Error: ${err.message}. Ensure server is running.`);
+                showError(`Connection Failed: ${err.message}. Is the server running?`);
             } finally {
-                setLoading(false);
+                loginBtn.disabled = false;
+                loginBtn.textContent = "Access Dashboard";
             }
         }
 
-        async function markAsRedeemed(code) {
-            if (!confirm(`Mark code ${code} as redeemed?`)) return;
-
+        async function markRedeemed(code) {
+            if (!confirm(`Mark ${code} as redeemed?`)) return;
             try {
-                const response = await fetch('/api/admin/redeem', {
+                await fetch('/api/admin/redeem', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-password': adminPassword
-                    },
+                    headers: { 'Content-Type': 'application/json', 'x-admin-password': currentPass },
                     body: JSON.stringify({ discount_code: code })
                 });
-
-                if (response.ok) {
-                    fetchWinners();
-                } else {
-                    alert("Update failed. Please try again.");
-                }
-            } catch (err) {
-                alert("Network error. Check connection.");
-            }
+                fetchWinners();
+            } catch (e) { alert("Failed to update status."); }
         }
 
-        function renderWinners(winners) {
-            const tbody = document.getElementById('winnersTable');
-            tbody.innerHTML = '';
-
-            document.getElementById('countWinners').textContent = winners.length;
-            document.getElementById('countRemaining').textContent = Math.max(0, 15 - winners.length);
-
-            if (winners.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim)">No winners yet.</td></tr>';
+        function renderTable(winners) {
+            if (!winners || winners.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:3rem; color:var(--text-dim)">No winners found yet.</td></tr>';
                 return;
             }
 
-            winners.forEach(w => {
+            tableBody.innerHTML = winners.map(w => {
                 const date = new Date(w.created_at).toLocaleString();
-                const status = w.redeemed_at
-                    ? `<span class="badge badge-redeemed">Redeemed</span>`
-                    : `<span class="badge badge-pending">Waiting</span>`;
+                const isRedeemed = !!w.redeemed_at;
 
-                const action = w.redeemed_at
-                    ? `<span style="opacity: 0.3; font-size: 0.8rem">Done</span>`
-                    : `<button class="redeem-btn" onclick="markAsRedeemed('${w.discount_code}')">Redeem</button>`;
-
-                const row = `
+                return `
                     <tr>
-                        <td style="font-size: 0.85rem; color: var(--text-dim)">${date}</td>
-                        <td style="font-size: 0.95rem">${w.email}</td>
-                        <td style="font-weight: 600">${w.prize_label}</td>
-                        <td><span class="code">${w.discount_code}</span></td>
-                        <td>${status}</td>
-                        <td>${action}</td>
+                        <td style="color:var(--text-dim); font-size:0.85rem">${date}</td>
+                        <td style="font-weight:600">${w.email}</td>
+                        <td style="color:var(--primary); font-weight:700">${w.prize_label}</td>
+                        <td><span class="code-text">${w.discount_code}</span></td>
+                        <td><span class="badge ${isRedeemed ? 'badge-redeemed' : 'badge-pending'}">${isRedeemed ? 'Redeemed' : 'Active'}</span></td>
+                        <td>
+                            ${isRedeemed ? '<span style="opacity:0.3">Done</span>' : `<button class="redeem-btn" onclick="markRedeemed('${w.discount_code}')">Mark Used</button>`}
+                        </td>
                     </tr>
                 `;
-                tbody.insertAdjacentHTML('beforeend', row);
-            });
+            }).join('');
         }
 
-        function login() {
-            const pass = document.getElementById('adminPass').value;
-            if (!pass) {
-                showLogin("Please enter a password.");
-                return;
-            }
-            adminPassword = pass;
-            fetchWinners();
-        }
-
-        function showLogin(msg) {
-            document.getElementById('loginOverlay').classList.remove('hidden');
-            if (msg) {
-                loginStatus.innerHTML = `<span style="color: var(--error)">${msg}</span>`;
-            }
-        }
-
-        function hideLogin() {
-            document.getElementById('loginOverlay').classList.add('hidden');
-            localStorage.setItem('admin_pass', adminPassword);
+        function showError(msg) {
+            debugInfo.textContent = msg;
+            debugInfo.classList.remove('hidden');
         }
 
         function logout() {
-            localStorage.removeItem('admin_pass');
+            localStorage.removeItem('spin_admin_pass');
             location.reload();
         }
 
-        function setLoading(loading) {
-            loginBtn.disabled = loading;
-            loginBtn.textContent = loading ? "Authenticating..." : "Access Dashboard";
-        }
+        // Auto-login if we have a saved pass
+        if (currentPass) fetchWinners();
 
-        // Initial Load
-        if (adminPassword) {
-            fetchWinners();
-        }
     </script>
 </body>
 
