@@ -1,13 +1,13 @@
-const { customAlphabet } = require('nanoid');
 const crypto = require('crypto');
 
-// Generate a secure, unique discount code
-// Using a custom alphabet to avoid ambiguous characters
-const alphabet = '2346789ABCDEFGHJKLMNPQRTUVWXYZ';
-const nanoid = customAlphabet(alphabet, 12);
-
+// Generate a secure, unique discount code using built-in Crypto
 function generateDiscountCode() {
-    return `WIN-${nanoid()}`;
+    const chars = '2346789ABCDEFGHJKLMNPQRTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 10; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `WIN-${code}`;
 }
 
 // Standardized API Response
@@ -29,3 +29,4 @@ module.exports = {
     apiResponse,
     asyncHandler
 };
+
