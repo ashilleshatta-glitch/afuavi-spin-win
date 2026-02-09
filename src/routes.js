@@ -209,5 +209,39 @@ router.post('/register', asyncHandler(async (req, res) => {
     return apiResponse(res, 201, true, customer, "Customer registered");
 }));
 
+// --- ADMIN ENDPOINTS ---
+
+/**
+ * GET /api/admin/winners
+ * Securely fetch all winners for the dashboard
+ */
+router.get('/admin/winners', asyncHandler(async (req, res) => {
+    const password = req.headers['x-admin-password'];
+    const validPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    if (password !== validPassword) {
+        return apiResponse(res, 401, false, null, "Unauthorized access.");
+    }
+
+    const result = await pool.query(`
+        SELECT 
+            s.id,
+            c.email, 
+            s.prize_label, 
+            s.discount_code, 
+            s.created_at,
+            r.redeemed_at
+        FROM spins s
+        JOIN customers c ON s.customer_id = c.id
+        LEFT JOIN redemptions r ON r.discount_code = s.discount_code
+        WHERE s.won = TRUE
+        ORDER BY s.created_at DESC
+    `);
+
+    return apiResponse(res, 200, true, result.rows, "Winners fetched successfully");
+}));
+
 module.exports = router;
+
+
 
