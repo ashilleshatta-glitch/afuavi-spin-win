@@ -2,97 +2,367 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spin & Win | Exclusive Discounts</title>
-  <meta name="description" content="Spin the wheel to win exclusive discounts and prizes!">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Spin & Win</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --primary: #ff6b9d;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #22c55e;
+            --border: rgba(255, 255, 255, 0.1);
+        }
 
-  <!-- Preload fonts for performance -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+        }
+
+        header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Promotion Section */
+        .promo-section {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .qr-card {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .promo-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .share-btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 700;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stat-val {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-top: 0.5rem;
+            color: #fff;
+        }
+
+        .stat-val.primary {
+            color: var(--primary);
+        }
+
+        .table-container {
+            background: var(--surface);
+            border-radius: 1rem;
+            overflow: auto;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.2rem 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            text-align: left;
+        }
+
+        td {
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .badge-redeemed {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .action-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        #liveIndicator {
+            font-size: 0.75rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 0.2;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.2;
+            }
+        }
+
+        #errorBox {
+            margin-top: 1.5rem;
+            color: #ef4444;
+            font-size: 0.85rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+        }
+    </style>
 </head>
 
 <body>
 
-  <div class="container">
     <header>
-      <p class="campaign-header"
-        style="font-size: 1.1rem; font-weight: 700; color: #ff6b9d; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px;">
-        Afuavi's Month of Love</p>
-      <h1>Spin & Win</h1>
-      <p class="subtitle">Test your luck to win exclusive prizes!</p>
+        <div>
+            <h1 style="margin:0; font-size: 1.5rem;">Live Management Dashboard</h1>
+            <div id="liveIndicator"><span class="dot"></span> Connection Active: Listening for Spins...</div>
+        </div>
+        <button class="action-btn" onclick="fetchWinners()"
+            style="background: rgba(255,255,255,0.1); border: 1px solid var(--border)">Pulse Sync</button>
     </header>
 
-    <main>
-      <!-- Wheel Section -->
-      <div class="wheel-container">
-        <!-- Indicator Marker -->
-        <div class="marker"></div>
-
-        <!-- Rotating Part -->
-        <div class="wheel-outer" id="wheelOuter">
-          <div class="wheel">
-            <!-- Wheel Text Segments -->
-            <div class="segment" style="--i:1;"><span>30%<br>OFF</span></div>
-            <div class="segment" style="--i:2;"><span>Try<br>Again</span></div>
-            <div class="segment" style="--i:3;"><span>20%<br>OFF</span></div>
-            <div class="segment" style="--i:4;"><span>Try<br>Again</span></div>
-            <div class="segment" style="--i:5;"><span>10%<br>OFF</span></div>
-            <div class="segment" style="--i:6;"><span>5%<br>OFF</span></div>
-            <div class="segment" style="--i:7;"><img src="chocolate.png" alt="Chocolate" class="prize-icon"></div>
-            <div class="segment" style="--i:8;"><span>Try<br>Again</span></div>
-          </div>
+    <div class="container">
+        <!-- PROMOTION & SHARING SECTION -->
+        <div class="promo-section">
+            <div class="qr-card">
+                <img id="qrCode" style="width: 150px; height: 150px;" alt="Scan to Spin">
+            </div>
+            <div class="promo-info">
+                <h2 style="margin:0">Share This Campaign</h2>
+                <p style="color: var(--text-dim); margin: 0.5rem 0 1.5rem 0;">Screenshot and share your unique QR code
+                    or link to your platforms.</p>
+                <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                    <button class="action-btn" onclick="copySiteLink()" id="copyBtn">Copy Link</button>
+                    <a id="waShare" href="#" target="_blank" class="share-btn">WhatsApp Share</a>
+                </div>
+            </div>
         </div>
 
-        <!-- Center Cap -->
-        <div class="wheel-center">
-          <span>SPIN</span>
-        </div>
-      </div>
+        <div id="errorBox"></div>
 
-      <!-- Controls -->
-      <div class="controls">
-        <button id="spinBtn" class="spin-btn">Spin Now</button>
-      </div>
-
-      <!-- Result Modal (Hidden initially) -->
-      <div id="resultModal" class="result-modal" aria-live="polite">
-        <h2 id="resultTitle" class="result-title"></h2>
-        <p id="resultMessage" class="message"></p>
-
-        <div id="discountSection" class="code-container">
-          <div class="code-box">
-            <span class="code-label">Discount Code:</span>
-            <span id="discountCode" class="code-value">---</span>
-            <button class="copy-btn" onclick="copyToClipboard('discountCode')">Copy</button>
-          </div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Visitors</div>
+                <div class="stat-val primary" id="statVisitors">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Actual Spins</div>
+                <div class="stat-val" id="statSpins">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Confirmed Winners</div>
+                <div class="stat-val" id="statWinners">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Prizes Left</div>
+                <div class="stat-val" id="statRemaining">15</div>
+            </div>
         </div>
 
-        <div id="redemptionSection" class="code-container hidden">
-          <div class="code-box">
-            <span class="code-label">Redemption ID:</span>
-            <span id="redemptionCode" class="code-value">---</span>
-            <button class="copy-btn" onclick="copyToClipboard('redemptionCode')">Copy</button>
-          </div>
-          <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 5px;">
-            * Show this ID to cashier to claim your prize.
-          </p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="20%">Date & Time</th>
+                        <th width="25%">Winner Email/ID</th>
+                        <th width="15%">Prize Won</th>
+                        <th width="20%">Discount Code</th>
+                        <th width="10%">Status</th>
+                        <th width="10%">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="winnerTableBody">
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding: 4rem; color: var(--text-dim)">Initializing
+                            live feed...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-      </div>
-    </main>
+    </div>
 
-    <footer>
-      <p style="margin-top: 40px; font-size: 0.8rem; opacity: 0.5;">
-        &copy; 2026 Campaign. Terms & Conditions apply.
-      </p>
-    </footer>
-  </div>
+    <script>
+        const tableBody = document.getElementById('winnerTableBody');
+        const errorBox = document.getElementById('errorBox');
+        const siteUrl = window.location.origin;
 
-  <script src="script.js"></script>
+        // --- PROMOTION TOOLS ---
+        function setupPromotion() {
+            // Generate QR Code using a public API
+            const qrImage = document.getElementById('qrCode');
+            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(siteUrl)}`;
+
+            // Setup WhatsApp Share Link
+            const waShare = document.getElementById('waShare');
+            const shareText = encodeURIComponent(`Hey! Spin the wheel to win exclusive prizes from Afuavi! Try your luck here: ${siteUrl}`);
+            waShare.href = `https://wa.me/?text=${shareText}`;
+        }
+
+        function copySiteLink() {
+            navigator.clipboard.writeText(siteUrl);
+            const btn = document.getElementById('copyBtn');
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy Link", 2000);
+        }
+
+        async function fetchWinners() {
+            try {
+                const response = await fetch('/api/admin/winners');
+                const result = await response.json();
+
+                document.getElementById('statVisitors').textContent = result.data.stats.total_customers;
+                document.getElementById('statSpins').textContent = result.data.stats.total_spins;
+                document.getElementById('statWinners').textContent = result.data.winners.length;
+                document.getElementById('statRemaining').textContent = Math.max(0, 15 - result.data.winners.length);
+
+                renderTable(result.data.winners);
+                errorBox.style.display = 'none';
+            } catch (err) {
+                errorBox.textContent = "Sync Error: Database unreachable.";
+                errorBox.style.display = 'block';
+            }
+        }
+
+        async function markRedeemed(code) {
+            if (!confirm(`Mark code ${code} as redeemed?`)) return;
+            await fetch('/api/admin/redeem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discount_code: code })
+            });
+            fetchWinners();
+        }
+
+        function renderTable(winners) {
+            if (!winners || winners.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:4rem; color:var(--text-dim)">No winners yet.</td></tr>';
+                return;
+            }
+            tableBody.innerHTML = winners.map(w => {
+                const time = new Date(w.created_at).toLocaleString();
+                const isUsed = !!w.redeemed_at;
+                return `
+                    <tr>
+                        <td style="font-size:0.85rem">${time}</td>
+                        <td style="font-weight:600">${w.email}</td>
+                        <td style="color:var(--primary); font-weight:700">${w.prize_label}</td>
+                        <td style="font-family:monospace; font-weight:bold">${w.discount_code}</td>
+                        <td><span class="badge ${isUsed ? 'badge-redeemed' : 'badge-pending'}">${isUsed ? 'Redeemed' : 'Active'}</span></td>
+                        <td>${isUsed ? '' : `<button class="action-btn" onclick="markRedeemed('${w.discount_code}')">Redeem</button>`}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        setInterval(fetchWinners, 8000);
+        setupPromotion();
+        fetchWinners();
+    </script>
 </body>
-
-</html>
 
 </html>
