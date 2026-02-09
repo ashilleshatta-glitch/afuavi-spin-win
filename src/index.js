@@ -19,8 +19,12 @@ app.use(express.static('public')); // Serve frontend files
 // Routes
 app.use('/api', routes);
 
+// Explicitly serve admin page
+app.get('/admin', (req, res) => {
+    res.sendFile('admin.html', { root: 'public' });
+});
+
 // Catch-all route - serve index.html for any non-API route
-// This allows the frontend to work properly
 app.get('*', (req, res) => {
     res.sendFile('index.html', { root: 'public' });
 });
