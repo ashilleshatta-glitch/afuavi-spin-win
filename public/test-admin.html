@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #0f172a;
+            color: white;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .success {
+            background: #22c55e;
+        }
+
+        .error {
+            background: #ef4444;
+        }
+
+        pre {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #ff6b9d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Admin API Test Page</h1>
+
+    <div>
+        <button onclick="testAdminAPI()">Test Admin API</button>
+        <button onclick="testShareButtons()">Test Share Functions</button>
+    </div>
+
+    <div id="status"></div>
+    <div id="output"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const outputDiv = document.getElementById('output');
+
+        async function testAdminAPI() {
+            statusDiv.innerHTML = '<div class="status">Testing API...</div>';
+            outputDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/admin/winners');
+                const data = await response.json();
+
+                statusDiv.innerHTML = '<div class="status success">✓ API Connected Successfully!</div>';
+                outputDiv.innerHTML = `
+                    <h3>API Response:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    
+                    <h3>Stats:</h3>
+                    <ul>
+                        <li>Total Customers: ${data.data.stats.total_customers}</li>
+                        <li>Total Spins: ${data.data.stats.total_spins}</li>
+                        <li>Winners: ${data.data.winners.length}</li>
+                    </ul>
+                    
+                    <h3>Winners List:</h3>
+                    <table border="1" style="width:100%; border-collapse: collapse;">
+                        <tr>
+                            <th>Email</th>
+                            <th>Prize</th>
+                            <th>Code</th>
+                            <th>Date</th>
+                        </tr>
+                        ${data.data.winners.map(w => `
+                            <tr>
+                                <td>${w.email}</td>
+                                <td>${w.prize_label}</td>
+                                <td>${w.discount_code}</td>
+                                <td>${new Date(w.created_at).toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                `;
+            } catch (err) {
+                statusDiv.innerHTML = `<div class="status error">✗ API Error: ${err.message}</div>`;
+                outputDiv.innerHTML = `<pre>${err.stack}</pre>`;
+            }
+        }
+
+        function testShareButtons() {
+            const siteUrl = window.location.origin.includes('file://')
+                ? 'http://localhost:3000'
+                : window.location.origin;
+
+            statusDiv.innerHTML = `<div class="status success">Site URL: ${siteUrl}</div>`;
+
+            // Test WhatsApp
+            const shareText = `Check this out! Spin the wheel to win exclusive prizes from Afuavi! Try your luck here: ${siteUrl}`;
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+
+            outputDiv.innerHTML = `
+                <h3>Share URLs:</h3>
+                <p><strong>WhatsApp URL:</strong><br>
+                <a href="${waUrl}" target="_blank" style="color: #60a5fa; word-break: break-all;">${waUrl}</a></p>
+                
+                <p><strong>Site URL:</strong> ${siteUrl}</p>
+                
+                <button onclick="window.open('${waUrl}', '_blank')">Open WhatsApp Share</button>
+                <button onclick="navigator.clipboard.writeText('${siteUrl}').then(() => alert('Copied!'))">Copy Site URL</button>
+            `;
+        }
+
+        // Auto-run test on load
+        window.addEventListener('DOMContentLoaded', testAdminAPI);
+    </script>
+</body>
+
+</html>
